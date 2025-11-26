@@ -1,75 +1,77 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import LabelEncoder, MultiLabelBinarizer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.base import BaseEstimator, TransformerMixin
 import joblib
+from pathlib import Path
 
-# Generate dummy dataset (100 samples)
-np.random.seed(42)
-data = {
-    'strongest_subjects': [np.random.choice(['Programming', 'Mathematics', 'Web development / design', 'Networking / hardware', 'Data analysis', 'Business or management'], size=np.random.randint(1, 3), replace=False).tolist() for _ in range(100)],
-    'preferred_task': np.random.choice(['Designing websites or interfaces', 'Solving logic or programming problems', 'Fixing computers or networks', 'Analyzing data or organizing information', 'Creating games or graphics', 'Planning business or technical solutions'], 100),
-    'prog_skills': np.random.randint(1, 6, 100),
-    'tech_interest': np.random.randint(1, 6, 100),
-    'career_want': np.random.choice(['Web/Mobile Developer', 'Software Engineer', 'Network Administrator / Cybersecurity', 'Data Analyst / Database Admin', 'Game Developer / Graphics', 'Business Analyst / Information Systems'], 100),
-    'prefer_work': np.random.choice(['Design', 'Code', 'Hardware'], 100),
-    'prefer_creative_logical': np.random.choice(['Creative', 'Logical', 'Both'], 100),
-    'major': np.random.choice(['Computer Science', 'Information Technology', 'Software Engineering', 'Data Science', 'Cybersecurity', 'Business Information Systems'], 100)  # Target
-}
-df = pd.DataFrame(data)
+BACKEND_DIR = Path(__file__).parent
+MODELS_DIR = BACKEND_DIR / 'models'
+MODEL_OUT = MODELS_DIR / 'model_pipeline.pkl'
 
-# Preprocessing
-mlb = MultiLabelBinarizer()
-subjects_encoded = pd.DataFrame(mlb.fit_transform(df['strongest_subjects']), columns=mlb.classes_, index=df.index)
+# Use the merged dataset with majors
+DATA_FILE = BACKEND_DIR.parent / 'data'/ 'train_with_major.csv'
 
-le_task = LabelEncoder()
-le_career = LabelEncoder()
-le_work = LabelEncoder()
-le_creative = LabelEncoder()
-le_major = LabelEncoder()
+class StrongestSubjectsBinarizer(BaseEstimator, TransformerMixin):
+    def __init__(self, sep=';'):
+        self.sep = sep
+        self.subjects_ = []
 
-df['preferred_task_encoded'] = le_task.fit_transform(df['preferred_task'])
-df['career_want_encoded'] = le_career.fit_transform(df['career_want'])
-df['prefer_work_encoded'] = le_work.fit_transform(df['prefer_work'])
-df['prefer_creative_logical_encoded'] = le_creative.fit_transform(df['prefer_creative_logical'])
-df['major_encoded'] = le_major.fit_transform(df['major'])
+    def fit(self, X, y=None):
+        series = X['strongest_subjects'].fillna('').apply(lambda v: v if isinstance(v, list) else str(v))
+        sets = series.apply(lambda s: [i.strip() for i in s.split(self.sep) if i.strip()])
+        unique = set()
+        for lst in sets:
+            unique.update(lst)
+        self.subjects_ = sorted(unique)
+        return self
 
-# Combine features
-X = pd.concat([subjects_encoded, df[['preferred_task_encoded', 'prog_skills', 'tech_interest', 'career_want_encoded', 'prefer_work_encoded', 'prefer_creative_logical_encoded']]], axis=1)
-y = df['major_encoded']
+    def transform(self, X):
+        series = X['strongest_subjects'].fillna('').apply(lambda v: v if isinstance(v, list) else str(v))
+        sets = series.apply(lambda s: [i.strip() for i in s.split(self.sep) if i.strip()])
+        out = np.zeros((len(sets), len(self.subjects_)), dtype=int)
+        for i, lst in enumerate(sets):
+            for item in lst:
+                if item in self.subjects_:
+                    out[i, self.subjects_.index(item)] = 1
+        return out
 
-# Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+def train():
+    if not DATA_FILE.exists():
+        raise FileNotFoundError(f"Dataset not found at {DATA_FILE}")
 
-# Train model
-model = RandomForestClassifier(random_state=42)
-model.fit(X_train, y_train)
+    df = pd.read_csv(DATA_FILE)
+    print(f"Loaded: {DATA_FILE}")
 
-# Save model and encoders
-joblib.dump(model, 'model.pkl')
-joblib.dump(mlb, 'mlb.pkl')
-joblib.dump(le_task, 'le_task.pkl')
-joblib.dump(le_career, 'le_career.pkl')
-joblib.dump(le_work, 'le_work.pkl')
-joblib.dump(le_creative, 'le_creative.pkl')
-joblib.dump(le_major, 'le_major.pkl')
+    if 'major' not in df.columns:
+        raise RuntimeError("CSV must contain 'major' column as target label.")
 
-print("Model trained and saved.")
+    # Features vs target
+    X = df.drop(columns=['major'])
+    y = df['major'].astype(str)
 
-# Function to preprocess new input
-def preprocess_input(data):
-    mlb = joblib.load('mlb.pkl')
-    le_task = joblib.load('le_task.pkl')
-    le_career = joblib.load('le_career.pkl')
-    le_work = joblib.load('le_work.pkl')
-    le_creative = joblib.load('le_creative.pkl')
-    
-    subjects = pd.DataFrame(mlb.transform([data['strongest_subjects']]), columns=mlb.classes_)
-    task_encoded = le_task.transform([data['preferred_task']])[0]
-    career_encoded = le_career.transform([data['career_want']])[0]
-    work_encoded = le_work.transform([data['prefer_work']])[0]
-    creative_encoded = le_creative.transform([data['prefer_creative_logical']])[0]
-    
-    processed = subjects.values.flatten().tolist() + [task_encoded, int(data['prog_skills']), int(data['tech_interest']), career_encoded, work_encoded, creative_encoded]
-    return processed
+    # Preprocessing: detect categorical/numeric columns
+    categorical_cols = [col for col in X.columns if X[col].dtype == 'object']
+    numeric_cols = [col for col in X.columns if np.issubdtype(X[col].dtype, np.number)]
+
+    preprocessor = ColumnTransformer(transformers=[
+        ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), categorical_cols),
+        ('num', StandardScaler(), numeric_cols)
+    ], remainder='drop')
+
+    pipeline = Pipeline([
+        ('pre', preprocessor),
+        ('clf', RandomForestClassifier(n_estimators=150, random_state=42))
+    ])
+
+    pipeline.fit(X, y)
+
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    joblib.dump(pipeline, MODEL_OUT)
+    print(f"✅ Pipeline model trained and saved to {MODEL_OUT}")
+
+if __name__ == '__main__':
+    train()

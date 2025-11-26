@@ -1,17 +1,22 @@
 from flask import Flask
 from flask_cors import CORS
+from pathlib import Path
+import joblib
+
+# Initialize Flask
+app = Flask(__name__)
+CORS(app)
+
+# Import your blueprint
 from api.routes import api
+app.register_blueprint(api)
 
-def create_app():
-    app = Flask(__name__)
-    CORS(app)
-    
-    # Register the API blueprint at root path
-    app.register_blueprint(api, url_prefix='/')
-    
-    return app
+# ✅ Use absolute path for model file
+BASE_DIR = Path(__file__).parent
+MODEL_PATH = BASE_DIR / "models" / "model_pipeline.pkl"
 
-if __name__ == '__main__':
-    app = create_app()
-    # debug=True for development; set to False in production
-    app.run(host='0.0.0.0', port=5000, debug=True)
+# Load the trained model
+model = joblib.load(MODEL_PATH)
+
+if __name__ == "__main__":
+    app.run(debug=True)

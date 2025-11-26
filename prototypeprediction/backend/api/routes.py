@@ -4,6 +4,7 @@ import traceback
 
 api = Blueprint('api', __name__)
 
+# Legacy key mapping
 _LEGACY_MAP = {
     'task_enjoy': 'preferred_task',
     'prog_skills': 'programming_skills',
@@ -23,26 +24,19 @@ def predict():
         return ('', 200)
 
     try:
-        raw = request.get_data()
-        print("---- RAW REQUEST BODY (bytes) ----")
-        print(raw)
         data = request.get_json(force=True)
     except Exception as e:
-        body_preview = raw.decode('utf-8', errors='replace') if 'raw' in locals() else '<no body>'
-        print("JSON parse error:", e)
-        print("Body preview:", body_preview)
-        return jsonify({'error': f'Invalid JSON or Content-Type. parse error: {e}', 'body_preview': body_preview}), 400
+        return jsonify({
+            'error': f'Invalid JSON: {e}'
+        }), 400
 
     if not isinstance(data, dict):
         return jsonify({'error': 'Expected JSON object'}), 400
 
-    # Map legacy keys -> new keys only if new key missing
+    # Map legacy keys → new keys
     for old, new in _LEGACY_MAP.items():
         if old in data and new not in data:
             data[new] = data[old]
-
-    print("DEBUG /predict received keys:", list(data.keys()))
-    print("DEBUG /predict full payload:", data)
 
     required = [
         'strongest_subjects', 'preferred_task',
@@ -54,12 +48,14 @@ def predict():
     if missing:
         return jsonify({'error': f'Missing required fields: {missing}'}), 400
 
+    # Convert numeric fields safely
     try:
         prog = int(data.get('programming_skills'))
         interest = int(data.get('interest_in_technology'))
-    except Exception:
+    except (TypeError, ValueError):
         return jsonify({'error': "programming_skills and interest_in_technology must be integers"}), 400
 
+    # Normalize strongest_subjects
     strongest = data.get('strongest_subjects')
     if isinstance(strongest, str):
         if ';' in strongest:
@@ -81,11 +77,9 @@ def predict():
             data.get('preferred_work_type'),
             data.get('preferred_thinking_style')
         )
-    except KeyError as ke:
-        print("Missing key used inside code:", ke)
-        return jsonify({'error': f"Missing key inside server code: {ke}"}), 400
     except Exception as e:
         print("ERROR in predict_major:", traceback.format_exc())
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'error': str(e)}), 500
 
-    return jsonify({'major': recommended_major}), 200
+    # ✅ Return consistent key for frontend
+    return jsonify({"prediction": recommended_major}), 200

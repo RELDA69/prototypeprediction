@@ -1,197 +1,94 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CS/IT Recommender — New Layout</title>
-  <style>
-    :root{
-      --bg1: linear-gradient(135deg,#0ea5ff 0%, #5eead4 100%);
-      --card: rgba(255,255,255,0.85);
-      --muted:#64748b;
-      --accent:#1767ff;
-      --glass: rgba(255,255,255,0.12);
-      --radius:14px;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#f7fbff 0%, #ffffff 60%);color:#0f172a}
-
-    /* page layout */
-    .wrap{max-width:1200px;margin:36px auto;padding:20px;display:grid;grid-template-columns:260px 1fr 360px;gap:22px}
-
-    /* left nav / profile */
-    .left{background:var(--card);border-radius:var(--radius);padding:20px;backdrop-filter: blur(6px);box-shadow:0 6px 20px rgba(2,6,23,0.08)}
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:var(--bg1);color:white;font-weight:700}
-    .title{font-size:16px;font-weight:700}
-    .subtitle{font-size:12px;color:var(--muted)}
-    .left .stats{margin-top:18px;display:flex;flex-direction:column;gap:10px}
-    .stat{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.6),rgba(255,255,255,0.45));}
-
-    /* center hero */
-    .hero{background:linear-gradient(180deg,rgba(255,255,255,0.9),rgba(250,250,255,0.8));border-radius:var(--radius);padding:28px;box-shadow:0 10px 30px rgba(15,23,42,0.06)}
-    .hero-head{display:flex;justify-content:space-between;align-items:center}
-    .hero h1{margin:0;font-size:22px}
-    .hero p{margin:8px 0 18px;color:var(--muted);max-width:68%}
-
-    /* central interactive area */
-    .controls{display:flex;gap:12px;align-items:center}
-    .select{padding:12px 14px;border-radius:12px;background:var(--glass);border:1px solid rgba(15,23,42,0.06);min-width:160px}
-    .cta{padding:12px 18px;border-radius:12px;background:var(--accent);color:white;border:none;cursor:pointer;font-weight:600}
-
-    /* recommendations grid */
-    .recs{margin-top:20px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    .rec-card{padding:16px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.9),rgba(248,250,255,0.9));box-shadow:0 6px 14px rgba(2,6,23,0.04);border:1px solid rgba(15,23,42,0.03)}
-    .rec-card h3{margin:0 0 6px}
-    .rec-card p{margin:0;color:var(--muted);font-size:13px}
-
-    /* right panel (wizard) */
-    .right{background:linear-gradient(180deg,#ffffffaa,#ffffffcc);border-radius:var(--radius);padding:18px;position:relative}
-    .wizard-step{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
-    .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;background:#f1f5f9;font-weight:600}
-    .progress{height:8px;background:#eef2ff;border-radius:999px;overflow:hidden}
-    .progress > i{display:block;height:100%;background:linear-gradient(90deg,#60a5fa,#7c3aed);width:46%}
-    .suggestions{margin-top:12px}
-
-    /* footer small */
-    .small{font-size:12px;color:var(--muted)}
-
-    /* responsive */
-    @media (max-width:1000px){.wrap{grid-template-columns:1fr;padding:16px} .right{order:3} .left{order:2}}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Major Recommendation Prototype</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        form { max-width: 600px; margin: auto; }
+        .question { margin-bottom: 20px; }
+        label { display: block; margin: 5px 0; }
+        input[type="checkbox"], input[type="radio"] { margin-right: 10px; }
+        select { width: 100%; padding: 8px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        #results { margin-top: 20px; padding: 10px; border: 1px solid #ccc; display: none; }
+        #loading { display: none; color: blue; }
+        #error { display: none; color: red; }
+    </style>
 </head>
 <body>
-  <div class="wrap">
-    <!-- LEFT: brand + quick info -->
-    <aside class="left">
-      <div class="brand">
-        <div class="logo">CS</div>
-        <div>
-          <div class="title">CS/IT Recommender</div>
-          <div class="subtitle">Find majors • Courses • Starters</div>
+    <h1>Major Recommendation Tool</h1>
+    <form id="recommendationForm">
+        <div class="question">
+            <label>What subjects are you strongest in? (Choose 1–2)</label>
+            <input type="checkbox" name="strongest_subjects" value="Programming"> Programming<br>
+            <input type="checkbox" name="strongest_subjects" value="Mathematics"> Mathematics<br>
+            <input type="checkbox" name="strongest_subjects" value="Web development / design"> Web development / design<br>
+            <input type="checkbox" name="strongest_subjects" value="Networking / hardware"> Networking / hardware<br>
+            <input type="checkbox" name="strongest_subjects" value="Data analysis"> Data analysis<br>
+            <input type="checkbox" name="strongest_subjects" value="Business or management"> Business or management
         </div>
-      </div>
-
-      <div class="stats">
-        <div class="stat"><div>Selected area</div><div class="small">Cybersecurity</div></div>
-        <div class="stat"><div>Active users</div><div class="small">1.2k</div></div>
-        <div class="stat"><div>Last update</div><div class="small">2 days ago</div></div>
-      </div>
-
-      <div style="margin-top:18px" class="small">Tip: Use the wizard on the right to get tailored results faster.</div>
-    </aside>
-
-    <!-- CENTER: hero + recommendations -->
-    <main class="hero">
-      <div class="hero-head">
-        <div>
-          <h1>Discover a pathway that fits you</h1>
-          <p>Tell us what excites you and what your current skills are — we’ll suggest majors, intro courses and project ideas arranged by effort and career fit.</p>
+        <div class="question">
+            <label>What type of tasks do you enjoy the most? (Choose one)</label>
+            <input type="radio" name="task_enjoy" value="Designing websites or interfaces" required> Designing websites or interfaces<br>
+            <input type="radio" name="task_enjoy" value="Solving logic or programming problems" required> Solving logic or programming problems<br>
+            <input type="radio" name="task_enjoy" value="Fixing computers or networks" required> Fixing computers or networks<br>
+            <input type="radio" name="task_enjoy" value="Analyzing data or organizing information" required> Analyzing data or organizing information<br>
+            <input type="radio" name="task_enjoy" value="Creating games or graphics" required> Creating games or graphics<br>
+            <input type="radio" name="task_enjoy" value="Planning business or technical solutions" required> Planning business or technical solutions
         </div>
-        <div style="text-align:right">
-          <div class="chip">🎯 Focused • Personalized</div>
-          <div style="height:12px"></div>
-          <div class="small">Progress saved locally • No signup required</div>
+        <div class="question">
+            <label>How do you rate your programming skills? (1–5)</label>
+            <select name="prog_skills" required>
+                <option value="">Select</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
         </div>
-      </div>
-
-      <div style="margin-top:18px;display:flex;align-items:center;justify-content:space-between;gap:12px">
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-          <select class="select" aria-label="interest">
-            <option>Cybersecurity</option>
-            <option>Software Engineering</option>
-            <option>Data Science</option>
-            <option>Networking</option>
-          </select>
-
-          <select class="select">
-            <option>Programming</option>
-            <option>Hardware</option>
-            <option>Algorithms</option>
-            <option>DevOps</option>
-          </select>
-
-          <select class="select">
-            <option>Beginner</option>
-            <option>Intermediate</option>
-            <option>Advanced</option>
-          </select>
-
-          <button class="cta">Get Recommendations</button>
+        <div class="question">
+            <label>How do you rate your interest in technology? (1–5)</label>
+            <select name="tech_interest" required>
+                <option value="">Select</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
         </div>
-
-        <div style="min-width:220px;text-align:right">
-          <div class="small">Suggested time: 5–10 minutes</div>
-          <div style="height:6px"></div>
-          <div class="progress" aria-hidden><i></i></div>
+        <div class="question">
+            <label>What kind of career do you want in the future? (Choose one)</label>
+            <input type="radio" name="career_want" value="Web/Mobile Developer" required> Web/Mobile Developer<br>
+            <input type="radio" name="career_want" value="Software Engineer" required> Software Engineer<br>
+            <input type="radio" name="career_want" value="Network Administrator / Cybersecurity" required> Network Administrator / Cybersecurity<br>
+            <input type="radio" name="career_want" value="Data Analyst / Database Admin" required> Data Analyst / Database Admin<br>
+            <input type="radio" name="career_want" value="Game Developer / Graphics" required> Game Developer / Graphics<br>
+            <input type="radio" name="career_want" value="Business Analyst / Information Systems" required> Business Analyst / Information Systems
         </div>
-      </div>
-
-      <div class="recs">
-        <article class="rec-card">
-          <h3>Software Engineering Major</h3>
-          <p>Path: Data Structures → Algorithms → Systems Design</p>
-        </article>
-
-        <article class="rec-card">
-          <h3>Beginner Starter</h3>
-          <p>Course: Intro to Computer Science • Mini projects</p>
-        </article>
-
-        <article class="rec-card">
-          <h3>Cybersecurity Track</h3>
-          <p>Path: Networking Basics → Security Fundamentals → Lab</p>
-        </article>
-
-        <article class="rec-card">
-          <h3>Portfolio Project</h3>
-          <p>Build: Simple web app + deployment</p>
-        </article>
-      </div>
-    </main>
-
-    <!-- RIGHT: wizard / filters -->
-    <aside class="right">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-weight:700">Personalize results</div>
-          <div class="small">3 steps • fast</div>
+        <div class="question">
+            <label>Do you prefer working with design, code, or hardware?</label>
+            <input type="radio" name="prefer_work" value="Design" required> Design<br>
+            <input type="radio" name="prefer_work" value="Code" required> Code<br>
+            <input type="radio" name="prefer_work" value="Hardware" required> Hardware
         </div>
-        <div class="chip">Save</div>
-      </div>
-
-      <div style="height:14px"></div>
-
-      <div class="wizard-step">
-        <label class="small">1 — Interest</label>
-        <select class="select"><option>Cybersecurity</option><option>Data Science</option></select>
-      </div>
-
-      <div class="wizard-step">
-        <label class="small">2 — Strengths</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="select">Logic</button><button class="select">Coding</button><button class="select">Design</button></div>
-      </div>
-
-      <div class="wizard-step">
-        <label class="small">3 — Goal</label>
-        <div style="display:flex;flex-direction:column;gap:8px"><input class="select" placeholder="e.g. Internship, Research, Job"/></div>
-      </div>
-
-      <div class="suggestions">
-        <div style="font-weight:700">Quick suggestions</div>
-        <ul style="margin:8px 0 0;padding-left:18px;color:var(--muted)">
-          <li>Try a mini project after 2 courses</li>
-          <li>Pair with a mentor for faster learning</li>
-          <li>Build a GitHub portfolio</li>
-        </ul>
-      </div>
-
-      <div style="position:absolute;left:18px;right:18px;bottom:18px;display:flex;justify-content:space-between;align-items:center">
-        <div class="small">Need printable guide?</div>
-        <button class="select">Export PDF</button>
-      </div>
-    </aside>
-  </div>
+        <div class="question">
+            <label>Do you prefer creative work or logical problem-solving?</label>
+            <input type="radio" name="prefer_creative_logical" value="Creative" required> Creative<br>
+            <input type="radio" name="prefer_creative_logical" value="Logical" required> Logical<br>
+            <input type="radio" name="prefer_creative_logical" value="Both" required> Both
+        </div>
+        <button type="submit">Get Recommendation</button>
+    </form>
+    <div id="loading">Loading...</div>
+    <div id="error"></div>
+    <div id="results">
+        <h2>Recommended Major:</h2>
+        <p id="prediction"></p>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>

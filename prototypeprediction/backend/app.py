@@ -1,32 +1,29 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
-import pandas as pd
+import numpy as np
+from model import preprocess_input  # Import preprocessing function from model.py
 
 app = Flask(__name__)
-CORS(app)
+CORS(app)  # Enable CORS for cross-origin requests
 
 # Load the trained model
-model = joblib.load('ml/model.pkl')
+model = joblib.load('model.pkl')
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.json
-    # Prepare the input data for prediction
-    input_data = pd.DataFrame([{
-        'strongest_subjects': data['strongest_subjects'],
-        'preferred_task': data['preferred_task'],
-        'programming_skills': data['programming_skills'],
-        'interest_in_technology': data['interest_in_technology'],
-        'future_career_goal': data['future_career_goal'],
-        'preferred_work_type': data['preferred_work_type'],
-        'preferred_thinking_style': data['preferred_thinking_style']
-    }])
-    
-    # Make prediction
-    prediction = model.predict(input_data)
-    
-    return jsonify({'recommended_major': prediction[0]})
+    try:
+        data = request.get_json()
+        # Preprocess input to match training data
+        processed_data = preprocess_input(data)
+        # Make prediction
+        prediction = model.predict([processed_data])[0]
+        # Decode prediction back to major name
+        le_major = joblib.load('le_major.pkl')
+        major_name = le_major.inverse_transform([prediction])[0]
+        return jsonify({'prediction': major_name})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 if __name__ == '__main__':
     app.run(debug=True)

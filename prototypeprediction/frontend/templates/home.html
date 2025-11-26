@@ -5,90 +5,278 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Major Recommendation Prototype</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        form { max-width: 600px; margin: auto; }
-        .question { margin-bottom: 20px; }
-        label { display: block; margin: 5px 0; }
-        input[type="checkbox"], input[type="radio"] { margin-right: 10px; }
-        select { width: 100%; padding: 8px; }
-        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
-        #results { margin-top: 20px; padding: 10px; border: 1px solid #ccc; display: none; }
-        #loading { display: none; color: blue; }
-        #error { display: none; color: red; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        h1 { 
+            text-align: center; 
+            color: #333;
+        }
+        form { 
+            width: 100%;
+        }
+        .question { 
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .question label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        input[type="checkbox"], 
+        input[type="radio"] { 
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        .option-group {
+            margin-left: 10px;
+        }
+        .option-group label {
+            display: inline-block;
+            font-weight: normal;
+            margin: 5px 15px 5px 0;
+            cursor: pointer;
+        }
+        select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button { 
+            width: 100%;
+            padding: 12px 20px; 
+            background: #667eea; 
+            color: white; 
+            border: none; 
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #764ba2;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #results { 
+            margin-top: 20px; 
+            padding: 20px; 
+            border: 2px solid #28a745;
+            background: #d4edda;
+            border-radius: 8px;
+            display: none;
+        }
+        #results h2 {
+            color: #155724;
+            margin-top: 0;
+        }
+        #prediction {
+            font-size: 18px;
+            font-weight: bold;
+            color: #155724;
+        }
+        #loading { 
+            display: none; 
+            color: #667eea;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+        }
+        #error { 
+            display: none; 
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>Major Recommendation Tool</h1>
-    <form id="recommendationForm">
-        <div class="question">
-            <label>What subjects are you strongest in? (Choose 1–2)</label>
-            <input type="checkbox" name="strongest_subjects" value="Programming"> Programming<br>
-            <input type="checkbox" name="strongest_subjects" value="Mathematics"> Mathematics<br>
-            <input type="checkbox" name="strongest_subjects" value="Web development / design"> Web development / design<br>
-            <input type="checkbox" name="strongest_subjects" value="Networking / hardware"> Networking / hardware<br>
-            <input type="checkbox" name="strongest_subjects" value="Data analysis"> Data analysis<br>
-            <input type="checkbox" name="strongest_subjects" value="Business or management"> Business or management
+    <div class="container">
+        <h1>🎓 Major Recommendation Tool</h1>
+        <form id="recommendationForm">
+            <!-- Question 1: Strongest Subjects -->
+            <div class="question">
+                <label>What subjects are you strongest in? (Choose 1–2)</label>
+                <div class="option-group">
+                    <label><input type="checkbox" name="strongest_subjects" value="Programming"> Programming</label><br>
+                    <label><input type="checkbox" name="strongest_subjects" value="Mathematics"> Mathematics</label><br>
+                    <label><input type="checkbox" name="strongest_subjects" value="Web Dev / Design"> Web Dev / Design</label><br>
+                    <label><input type="checkbox" name="strongest_subjects" value="Networking / Hardware"> Networking / Hardware</label><br>
+                    <label><input type="checkbox" name="strongest_subjects" value="Data Analysis"> Data Analysis</label><br>
+                    <label><input type="checkbox" name="strongest_subjects" value="Business / Management"> Business / Management</label>
+                </div>
+            </div>
+
+            <!-- Question 2: Preferred Task -->
+            <div class="question">
+                <label>What type of tasks do you enjoy the most? (Choose one)</label>
+                <div class="option-group">
+                    <label><input type="radio" name="preferred_task" value="Designing websites / interfaces" required> Designing websites / interfaces</label><br>
+                    <label><input type="radio" name="preferred_task" value="Solving logic / programming problems" required> Solving logic / programming problems</label><br>
+                    <label><input type="radio" name="preferred_task" value="Fixing computers / networks" required> Fixing computers / networks</label><br>
+                    <label><input type="radio" name="preferred_task" value="Analyzing / organizing data" required> Analyzing / organizing data</label><br>
+                    <label><input type="radio" name="preferred_task" value="Creating games / graphics" required> Creating games / graphics</label><br>
+                    <label><input type="radio" name="preferred_task" value="Planning business / technical solutions" required> Planning business / technical solutions</label>
+                </div>
+            </div>
+
+            <!-- Question 3: Programming Skills -->
+            <div class="question">
+                <label for="programming_skills">How do you rate your programming skills? (1–5)</label>
+                <select name="programming_skills" id="programming_skills" required>
+                    <option value="">Select</option>
+                    <option value="1">1 - Beginner</option>
+                    <option value="2">2 - Basic</option>
+                    <option value="3">3 - Intermediate</option>
+                    <option value="4">4 - Advanced</option>
+                    <option value="5">5 - Expert</option>
+                </select>
+            </div>
+
+            <!-- Question 4: Interest in Technology -->
+            <div class="question">
+                <label for="interest_in_technology">How do you rate your interest in technology? (1–5)</label>
+                <select name="interest_in_technology" id="interest_in_technology" required>
+                    <option value="">Select</option>
+                    <option value="1">1 - Very Low</option>
+                    <option value="2">2 - Low</option>
+                    <option value="3">3 - Moderate</option>
+                    <option value="4">4 - High</option>
+                    <option value="5">5 - Very High</option>
+                </select>
+            </div>
+
+            <!-- Question 5: Future Career Goal -->
+            <div class="question">
+                <label>What kind of career do you want in the future? (Choose one)</label>
+                <div class="option-group">
+                    <label><input type="radio" name="future_career_goal" value="Web/Mobile Developer" required> Web/Mobile Developer</label><br>
+                    <label><input type="radio" name="future_career_goal" value="Software Engineer" required> Software Engineer</label><br>
+                    <label><input type="radio" name="future_career_goal" value="Network Admin / Cybersecurity" required> Network Admin / Cybersecurity</label><br>
+                    <label><input type="radio" name="future_career_goal" value="Data Analyst / DB Admin" required> Data Analyst / DB Admin</label><br>
+                    <label><input type="radio" name="future_career_goal" value="Game Dev / Graphics" required> Game Dev / Graphics</label><br>
+                    <label><input type="radio" name="future_career_goal" value="Business Analyst / IS" required> Business Analyst / IS</label>
+                </div>
+            </div>
+
+            <!-- Question 6: Preferred Work Type -->
+            <div class="question">
+                <label>Do you prefer working with design, code, or hardware?</label>
+                <div class="option-group">
+                    <label><input type="radio" name="preferred_work_type" value="Design" required> Design</label><br>
+                    <label><input type="radio" name="preferred_work_type" value="Code" required> Code</label><br>
+                    <label><input type="radio" name="preferred_work_type" value="Hardware" required> Hardware</label>
+                </div>
+            </div>
+
+            <!-- Question 7: Preferred Thinking Style -->
+            <div class="question">
+                <label>Do you prefer creative work or logical problem-solving?</label>
+                <div class="option-group">
+                    <label><input type="radio" name="preferred_thinking_style" value="Creative" required> Creative</label><br>
+                    <label><input type="radio" name="preferred_thinking_style" value="Logical" required> Logical</label><br>
+                    <label><input type="radio" name="preferred_thinking_style" value="Both" required> Both</label>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn">Get Recommendation</button>
+        </form>
+
+        <div id="loading">⏳ Loading prediction...</div>
+        <div id="error"></div>
+        <div id="results">
+            <h2>✅ Recommended Major:</h2>
+            <p id="prediction"></p>
         </div>
-        <div class="question">
-            <label>What type of tasks do you enjoy the most? (Choose one)</label>
-            <input type="radio" name="task_enjoy" value="Designing websites or interfaces" required> Designing websites or interfaces<br>
-            <input type="radio" name="task_enjoy" value="Solving logic or programming problems" required> Solving logic or programming problems<br>
-            <input type="radio" name="task_enjoy" value="Fixing computers or networks" required> Fixing computers or networks<br>
-            <input type="radio" name="task_enjoy" value="Analyzing data or organizing information" required> Analyzing data or organizing information<br>
-            <input type="radio" name="task_enjoy" value="Creating games or graphics" required> Creating games or graphics<br>
-            <input type="radio" name="task_enjoy" value="Planning business or technical solutions" required> Planning business or technical solutions
-        </div>
-        <div class="question">
-            <label>How do you rate your programming skills? (1–5)</label>
-            <select name="prog_skills" required>
-                <option value="">Select</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-            </select>
-        </div>
-        <div class="question">
-            <label>How do you rate your interest in technology? (1–5)</label>
-            <select name="tech_interest" required>
-                <option value="">Select</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-            </select>
-        </div>
-        <div class="question">
-            <label>What kind of career do you want in the future? (Choose one)</label>
-            <input type="radio" name="career_want" value="Web/Mobile Developer" required> Web/Mobile Developer<br>
-            <input type="radio" name="career_want" value="Software Engineer" required> Software Engineer<br>
-            <input type="radio" name="career_want" value="Network Administrator / Cybersecurity" required> Network Administrator / Cybersecurity<br>
-            <input type="radio" name="career_want" value="Data Analyst / Database Admin" required> Data Analyst / Database Admin<br>
-            <input type="radio" name="career_want" value="Game Developer / Graphics" required> Game Developer / Graphics<br>
-            <input type="radio" name="career_want" value="Business Analyst / Information Systems" required> Business Analyst / Information Systems
-        </div>
-        <div class="question">
-            <label>Do you prefer working with design, code, or hardware?</label>
-            <input type="radio" name="prefer_work" value="Design" required> Design<br>
-            <input type="radio" name="prefer_work" value="Code" required> Code<br>
-            <input type="radio" name="prefer_work" value="Hardware" required> Hardware
-        </div>
-        <div class="question">
-            <label>Do you prefer creative work or logical problem-solving?</label>
-            <input type="radio" name="prefer_creative_logical" value="Creative" required> Creative<br>
-            <input type="radio" name="prefer_creative_logical" value="Logical" required> Logical<br>
-            <input type="radio" name="prefer_creative_logical" value="Both" required> Both
-        </div>
-        <button type="submit">Get Recommendation</button>
-    </form>
-    <div id="loading">Loading...</div>
-    <div id="error"></div>
-    <div id="results">
-        <h2>Recommended Major:</h2>
-        <p id="prediction"></p>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        const form = document.getElementById('recommendationForm');
+        const loader = document.getElementById('loading');
+        const resultEl = document.getElementById('results');
+        const predictionEl = document.getElementById('prediction');
+        const errorEl = document.getElementById('error');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            resultEl.style.display = 'none';
+            errorEl.style.display = 'none';
+            loader.style.display = 'block';
+            submitBtn.disabled = true;
+
+            // Gather strongest_subjects (checkboxes) - must be 1-2 choices
+            const checkedSubjects = Array.from(form.querySelectorAll('input[name="strongest_subjects"]:checked')).map(i => i.value);
+            if (checkedSubjects.length === 0 || checkedSubjects.length > 2) {
+                loader.style.display = 'none';
+                submitBtn.disabled = false;
+                errorEl.textContent = '❌ Please choose 1–2 strongest subjects.';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            // Build payload matching backend expectations
+            const payload = {
+                strongest_subjects: checkedSubjects,
+                preferred_task: form.preferred_task.value,
+                programming_skills: Number(form.programming_skills.value),
+                interest_in_technology: Number(form.interest_in_technology.value),
+                future_career_goal: form.future_career_goal.value,
+                preferred_work_type: form.preferred_work_type.value,
+                preferred_thinking_style: form.preferred_thinking_style.value
+            };
+            
+            console.log('Sending payload:', payload);
+
+            try {
+            const res = await fetch('http://localhost:5000/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                console.log('Server error:', errData);  // ADD THIS TOO
+                throw new Error(errData.error || `Server error: ${res.statusText}`);
+            }
+
+                const data = await res.json();
+                const major = data.major || data.recommended_major || 'Unknown';
+                
+                predictionEl.textContent = major;
+                resultEl.style.display = 'block';
+            } catch (err) {
+                errorEl.textContent = `❌ Error: ${err.message}`;
+                errorEl.style.display = 'block';
+            } finally {
+                loader.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>

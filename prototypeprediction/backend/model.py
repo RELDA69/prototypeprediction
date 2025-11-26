@@ -9,7 +9,7 @@ import joblib
 np.random.seed(42)
 data = {
     'strongest_subjects': [np.random.choice(['Programming', 'Mathematics', 'Web development / design', 'Networking / hardware', 'Data analysis', 'Business or management'], size=np.random.randint(1, 3), replace=False).tolist() for _ in range(100)],
-    'task_enjoy': np.random.choice(['Designing websites or interfaces', 'Solving logic or programming problems', 'Fixing computers or networks', 'Analyzing data or organizing information', 'Creating games or graphics', 'Planning business or technical solutions'], 100),
+    'preferred_task': np.random.choice(['Designing websites or interfaces', 'Solving logic or programming problems', 'Fixing computers or networks', 'Analyzing data or organizing information', 'Creating games or graphics', 'Planning business or technical solutions'], 100),
     'prog_skills': np.random.randint(1, 6, 100),
     'tech_interest': np.random.randint(1, 6, 100),
     'career_want': np.random.choice(['Web/Mobile Developer', 'Software Engineer', 'Network Administrator / Cybersecurity', 'Data Analyst / Database Admin', 'Game Developer / Graphics', 'Business Analyst / Information Systems'], 100),
@@ -29,14 +29,14 @@ le_work = LabelEncoder()
 le_creative = LabelEncoder()
 le_major = LabelEncoder()
 
-df['task_enjoy_encoded'] = le_task.fit_transform(df['task_enjoy'])
+df['preferred_task_encoded'] = le_task.fit_transform(df['preferred_task'])
 df['career_want_encoded'] = le_career.fit_transform(df['career_want'])
 df['prefer_work_encoded'] = le_work.fit_transform(df['prefer_work'])
 df['prefer_creative_logical_encoded'] = le_creative.fit_transform(df['prefer_creative_logical'])
 df['major_encoded'] = le_major.fit_transform(df['major'])
 
 # Combine features
-X = pd.concat([subjects_encoded, df[['task_enjoy_encoded', 'prog_skills', 'tech_interest', 'career_want_encoded', 'prefer_work_encoded', 'prefer_creative_logical_encoded']]], axis=1)
+X = pd.concat([subjects_encoded, df[['preferred_task_encoded', 'prog_skills', 'tech_interest', 'career_want_encoded', 'prefer_work_encoded', 'prefer_creative_logical_encoded']]], axis=1)
 y = df['major_encoded']
 
 # Train-test split
@@ -66,7 +66,7 @@ def preprocess_input(data):
     le_creative = joblib.load('le_creative.pkl')
     
     subjects = pd.DataFrame(mlb.transform([data['strongest_subjects']]), columns=mlb.classes_)
-    task_encoded = le_task.transform([data['task_enjoy']])[0]
+    task_encoded = le_task.transform([data['preferred_task']])[0]
     career_encoded = le_career.transform([data['career_want']])[0]
     work_encoded = le_work.transform([data['prefer_work']])[0]
     creative_encoded = le_creative.transform([data['prefer_creative_logical']])[0]

@@ -29,9 +29,15 @@ def train():
 
     # Define categorical and numeric columns
     categorical_cols = [
-        "Year", "Technical Skills", "Programming Languages",
-        "Soft Skills", "Projects", "Career Interest",
-        "Challenges", "Support required", "Method"
+    "Year",  # Note the trailing space
+    "Technical Skills",
+    "Programming Languages",  # Note the leading spaces
+    "Soft Skills",
+    "Projects",  # Note the leading space
+    "Career Interest",
+    "Challenges",  # Note the trailing space
+    "Support required",
+    "Method"  # Note the leading space
     ]
     numeric_cols = ["Programming Languages Ratings", "Soft Skills Rating"]
 

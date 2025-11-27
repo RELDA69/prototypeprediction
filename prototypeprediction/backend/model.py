@@ -39,6 +39,19 @@ class StrongestSubjectsBinarizer(BaseEstimator, TransformerMixin):
                     out[i, self.subjects_.index(item)] = 1
         return out
 
+import pandas as pd
+import numpy as np
+from pathlib import Path
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestClassifier
+import joblib
+
+DATA_FILE = Path("train_with_major.csv")
+MODELS_DIR = Path("models")
+MODEL_OUT = MODELS_DIR / "model_pipeline.pkl"
+
 def train():
     if not DATA_FILE.exists():
         raise FileNotFoundError(f"Dataset not found at {DATA_FILE}")
@@ -50,25 +63,30 @@ def train():
         raise RuntimeError("CSV must contain 'major' column as target label.")
 
     # Features vs target
-    X = df.drop(columns=['major'])
-    y = df['major'].astype(str)
+    X = df.drop(columns=["major"])
+    y = df["major"]
 
     # Preprocessing: detect categorical/numeric columns
     categorical_cols = [col for col in X.columns if X[col].dtype == 'object']
     numeric_cols = [col for col in X.columns if np.issubdtype(X[col].dtype, np.number)]
 
-    preprocessor = ColumnTransformer(transformers=[
-        ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), categorical_cols),
-        ('num', StandardScaler(), numeric_cols)
-    ], remainder='drop')
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), categorical_cols),
+            ('num', StandardScaler(), numeric_cols)
+        ],
+        remainder='drop'
+    )
 
     pipeline = Pipeline([
         ('pre', preprocessor),
         ('clf', RandomForestClassifier(n_estimators=150, random_state=42))
     ])
 
+    # Fit pipeline
     pipeline.fit(X, y)
 
+    # Save pipeline
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
     joblib.dump(pipeline, MODEL_OUT)
     print(f"✅ Pipeline model trained and saved to {MODEL_OUT}")

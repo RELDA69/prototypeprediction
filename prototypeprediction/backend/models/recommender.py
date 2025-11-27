@@ -1,4 +1,5 @@
-﻿import re
+# ...existing code...
+import re
 from pathlib import Path
 import pickle
 
@@ -23,7 +24,7 @@ def _load():
     try:
         import joblib
     except Exception as e:
-        raise ImportError(f"joblib is required: {e}")
+        raise ImportError(f"joblib is required to load the model: {e}")
     if MODEL_PATH.exists():
         _model = joblib.load(MODEL_PATH)
     else:
@@ -35,9 +36,12 @@ def _load():
         _encoded_features = None
     return _model, _encoded_features
 
-def _build_encoded_row(encoded_features, strongest_subjects, preferred_task, programming_skills, interest_in_technology, future_career_goal, preferred_work_type, preferred_thinking_style):
+def _build_encoded_row(encoded_features, strongest_subjects, preferred_task,
+                       programming_skills, interest_in_technology,
+                       future_career_goal, preferred_work_type, preferred_thinking_style):
     import pandas as pd
     row = {c: 0 for c in encoded_features}
+    # numeric safe set
     if 'programming_skills' in row:
         try:
             row['programming_skills'] = float(programming_skills or 0)
@@ -49,7 +53,12 @@ def _build_encoded_row(encoded_features, strongest_subjects, preferred_task, pro
         except Exception:
             row['interest_in_technology'] = 0.0
     norm_features = {c: _normalize_text(c) for c in encoded_features}
-    mapping_inputs = {'preferred_task': preferred_task, 'future_career_goal': future_career_goal, 'preferred_work_type': preferred_work_type, 'preferred_thinking_style': preferred_thinking_style}
+    mapping_inputs = {
+        'preferred_task': preferred_task,
+        'future_career_goal': future_career_goal,
+        'preferred_work_type': preferred_work_type,
+        'preferred_thinking_style': preferred_thinking_style
+    }
     for _, value in mapping_inputs.items():
         if not value:
             continue
@@ -57,6 +66,7 @@ def _build_encoded_row(encoded_features, strongest_subjects, preferred_task, pro
         for col, ncol in norm_features.items():
             if nv and nv in ncol:
                 row[col] = 1
+    # subjects handling
     subjects = []
     if isinstance(strongest_subjects, list):
         subjects = strongest_subjects
@@ -74,19 +84,38 @@ def _build_encoded_row(encoded_features, strongest_subjects, preferred_task, pro
                 row[col] = 1
     return pd.DataFrame([row], columns=encoded_features)
 
-def predict_major(strongest_subjects, preferred_task, programming_skills, interest_in_technology, future_career_goal, preferred_work_type, preferred_thinking_style):
+def predict_major(strongest_subjects, preferred_task, programming_skills,
+                  interest_in_technology, future_career_goal,
+                  preferred_work_type, preferred_thinking_style):
+    """
+    Safe prediction entrypoint. Loads model lazily. Returns a string label or raises a descriptive error.
+    """
     import pandas as pd
     model, encoded_features = _load()
     if model is None:
-        raise RuntimeError(f"Model file not found at {MODEL_PATH}. Run model.py to train.")
+        raise RuntimeError(f"Model file not found at {MODEL_PATH}. Run model.py to train the model.")
+    # pipeline with preprocessing
     if hasattr(model, 'named_steps') and 'pre' in model.named_steps:
         ss = ';'.join(str(s).strip() for s in (strongest_subjects or [])) if isinstance(strongest_subjects, list) else str(strongest_subjects or '')
-        row = pd.DataFrame([{'strongest_subjects': ss, 'preferred_task': preferred_task, 'programming_skills': programming_skills, 'interest_in_technology': interest_in_technology, 'future_career_goal': future_career_goal, 'preferred_work_type': preferred_work_type, 'preferred_thinking_style': preferred_thinking_style}])
+        row = pd.DataFrame([{
+            'strongest_subjects': ss,
+            'preferred_task': preferred_task,
+            'programming_skills': programming_skills,
+            'interest_in_technology': interest_in_technology,
+            'future_career_goal': future_career_goal,
+            'preferred_work_type': preferred_work_type,
+            'preferred_thinking_style': preferred_thinking_style
+        }])
         pred = model.predict(row)
         return str(pred[0])
+    # encoded model path
     if encoded_features is None:
-        raise RuntimeError("Encoded model loaded but metadata missing. Retrain with model.py")
-    encoded_row = _build_encoded_row(encoded_features, strongest_subjects, preferred_task, programming_skills, interest_in_technology, future_career_goal, preferred_work_type, preferred_thinking_style)
+        raise RuntimeError("Encoded model loaded but encoded_features metadata missing. Retrain with model.py")
+    encoded_row = _build_encoded_row(encoded_features,
+                                     strongest_subjects, preferred_task,
+                                     programming_skills, interest_in_technology,
+                                     future_career_goal, preferred_work_type, preferred_thinking_style)
     encoded_row = encoded_row.reindex(columns=encoded_features, fill_value=0)
     pred = model.predict(encoded_row)
     return str(pred[0])
+# ...existing code...
